@@ -57,11 +57,25 @@ Erros: `400` telefone inválido · `402` sem créditos · `404` não encontrado 
 npm run lote -- "C:\Users\sindi\Downloads\buscas\planilha.xlsx"
 ```
 
-- Detecta a coluna de telefone pelo cabeçalho (Telefone, Celular, Fone, WhatsApp…) — ou use `--coluna "Nome"`.
+Dois modos:
+
+| Modo | Entrada | Retorno | Endpoint |
+| --- | --- | --- | --- |
+| `--modo telefone` (padrão) | telefone | titular, CPF, operadora, tipo | `GET /phone/:phone` |
+| `--modo cpf` | CPF | nome, Telefone 1..5 com operadora e tipo | `GET /cpf/:cpf` |
+
+```bash
+npm run lote -- "C:\Users\sindi\Downloads\buscas\planilha.xlsx" --modo cpf --limite 1 --mostrar-resposta
+```
+
+- No modo CPF, os dígitos verificadores são validados antes da consulta (CPF inválido não gasta crédito)
+  e CPFs que o Excel truncou (sem zeros à esquerda) são corrigidos.
+- `--mostrar-resposta` imprime o JSON do primeiro resultado — útil para conferir o formato dos telefones.
+- Detecta a coluna de entrada pelo cabeçalho (Telefone, Celular, Fone, WhatsApp…) — ou use `--coluna "Nome"`.
 - Mostra quantos créditos serão usados e pede confirmação (`--sim` pula).
 - `--limite 5` consulta só as 5 primeiras linhas (bom para testar). `--aba "Plan2"` escolhe a aba.
-- Gera `planilha_resultado.xlsx` com as colunas Titular, CPF, Operadora, Tipo e Status.
-- Telefones repetidos são consultados uma vez; `planilha.cache.json` evita debitar de novo
+- Gera `planilha_resultado.xlsx` com as colunas originais + resultado + Status.
+- Telefones repetidos são consultados uma vez; `planilha.<modo>.cache.json` evita debitar de novo
   se você rodar outra vez. Apague o cache ao terminar (contém dados pessoais).
 - Para automaticamente se acabarem os créditos ou a chave for recusada.
 
