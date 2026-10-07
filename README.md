@@ -51,6 +51,20 @@ Resposta:
 Erros: `400` telefone inválido · `402` sem créditos · `404` não encontrado ·
 `429` limite atingido · `502/504` falha no provedor.
 
+## Consulta em lote (Excel)
+
+```bash
+npm run lote -- "C:\Users\sindi\Downloads\buscas\planilha.xlsx"
+```
+
+- Detecta a coluna de telefone pelo cabeçalho (Telefone, Celular, Fone, WhatsApp…) — ou use `--coluna "Nome"`.
+- Mostra quantos créditos serão usados e pede confirmação (`--sim` pula).
+- `--limite 5` consulta só as 5 primeiras linhas (bom para testar). `--aba "Plan2"` escolhe a aba.
+- Gera `planilha_resultado.xlsx` com as colunas Titular, CPF, Operadora, Tipo e Status.
+- Telefones repetidos são consultados uma vez; `planilha.cache.json` evita debitar de novo
+  se você rodar outra vez. Apague o cache ao terminar (contém dados pessoais).
+- Para automaticamente se acabarem os créditos ou a chave for recusada.
+
 ## Deploy (Vercel)
 
 Cadastre as mesmas variáveis em *Project → Settings → Environment Variables*.
