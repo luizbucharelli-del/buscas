@@ -24,3 +24,8 @@ export function formatCpf(cpf: string): string {
 export function maskCpf(cpf: string): string {
   return cpf.replace(/^\d{3}(\d{3})(\d{3})\d{2}$/, "***.$1.$2-**");
 }
+
+/** Celular brasileiro: DDD + 9 dígitos começando com 9. Fixos (DDD + 8 dígitos) retornam false. */
+export function isMobile(digits: string): boolean {
+  return /^[1-9]{2}9\d{8}$/.test(digits);
+}

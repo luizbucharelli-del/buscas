@@ -62,7 +62,7 @@ Dois modos:
 | Modo | Entrada | Retorno | Endpoint |
 | --- | --- | --- | --- |
 | `--modo telefone` (padrão) | telefone | titular, CPF, operadora, tipo | `GET /phone/:phone` |
-| `--modo cpf` | CPF | nome, Telefone 1..5 com operadora e tipo | `GET /cpf/:cpf` |
+| `--modo cpf` | CPF | nome e até 5 celulares `(11) 99999-9999` com operadora e tipo — fixos são descartados | `GET /cpf/:cpf` |
 
 ```bash
 npm run lote -- "C:\Users\sindi\Downloads\buscas\planilha.xlsx" --modo cpf --limite 1 --mostrar-resposta

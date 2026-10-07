@@ -4,7 +4,7 @@
  *
  * Modos:
  *   --modo telefone (padrão)  telefone → titular/CPF       GET /phone/:phone
- *   --modo cpf                CPF      → nome/telefones    GET /cpf/:cpf
+ *   --modo cpf                CPF      → nome/celulares    GET /cpf/:cpf (fixos são descartados)
  *
  * Uso:
  *   npm run lote -- "C:\caminho\planilha.xlsx" [--modo cpf] [--coluna "CPF"] [--aba "Plan1"]
@@ -17,7 +17,7 @@ import ExcelJS from "exceljs";
 import { codeFromStatus, type AtlasenderErrorCode } from "../src/lib/atlasender/errors";
 import { extractPhones } from "../src/lib/atlasender/extract-phones";
 import { normalizeCpf } from "../src/lib/cpf";
-import { formatPhone, normalizePhone } from "../src/lib/phone";
+import { formatPhone, isMobile, normalizePhone } from "../src/lib/phone";
 
 type Outcome = { ok: true; data: Record<string, unknown> } | { ok: false; code: AtlasenderErrorCode };
 type Cell = string | number | null;
@@ -35,6 +35,8 @@ type Mode = {
 };
 
 const MAX_PHONES = 5;
+/** Só celulares — fixos são descartados. */
+const mobilePhones = (d: Record<string, unknown>) => extractPhones(d).filter((p) => isMobile(p.numero));
 const text = (v: unknown): Cell => (typeof v === "string" || typeof v === "number" ? v : null);
 
 const MODES: Record<string, Mode> = {
@@ -54,13 +56,13 @@ const MODES: Record<string, Mode> = {
     normalize: normalizeCpf,
     endpoint: "cpf",
     columns: (results) => {
-      const count = Math.min(MAX_PHONES, Math.max(1, ...results.map((r) => extractPhones(r).length)));
+      const count = Math.min(MAX_PHONES, Math.max(1, ...results.map((r) => mobilePhones(r).length)));
       const headers = ["Nome"];
       for (let i = 1; i <= count; i++) headers.push(`Telefone ${i}`, `Operadora ${i}`, `Tipo ${i}`);
       return {
         headers,
         cells: (d) => {
-          const phones = extractPhones(d);
+          const phones = mobilePhones(d);
           const row: Cell[] = [text(d.nome ?? d.titular)];
           for (let i = 0; i < count; i++) {
             const p = phones[i];
@@ -242,8 +244,8 @@ async function main() {
     const outcome = key ? cache[key] : undefined;
     if (outcome?.ok) {
       cells(outcome.data).forEach((v, i) => (r.getCell(firstCol + i).value = v));
-      const noPhones = mode === MODES.cpf && extractPhones(outcome.data).length === 0;
-      r.getCell(statusCol).value = noPhones ? "sem telefone" : "ok";
+      const noPhones = mode === MODES.cpf && mobilePhones(outcome.data).length === 0;
+      r.getCell(statusCol).value = noPhones ? "sem celular" : "ok";
       noPhones ? totals.semTelefone++ : totals.encontrados++;
     } else {
       r.getCell(statusCol).value = !key
@@ -260,11 +262,11 @@ async function main() {
 
   console.log(`\n\n✔ Resultado salvo em: ${outPath}`);
   const parts = [`${totals.encontrados} com resultado`];
-  if (mode === MODES.cpf) parts.push(`${totals.semTelefone} sem telefone`);
+  if (mode === MODES.cpf) parts.push(`${totals.semTelefone} sem celular`);
   parts.push(`${totals.naoEncontrados} não encontrados`, `${totals.erros} erros/inválidos`);
   console.log(`  ${parts.join(" · ")}`);
   if (mode === MODES.cpf && successes.length && totals.encontrados === 0) {
-    console.log("  ⚠ Nenhum telefone reconhecido. Rode com --limite 1 --mostrar-resposta e me envie o formato.");
+    console.log("  ⚠ Nenhum celular reconhecido. Rode com --limite 1 --mostrar-resposta e me envie o formato.");
   }
   console.log(`  (Apague ${path.basename(cachePath)} quando terminar — ele contém dados pessoais.)\n`);
 }
